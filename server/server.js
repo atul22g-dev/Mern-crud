@@ -4,6 +4,7 @@ const PORT = process.env.PORT || 5500;
 const app = express();
 const mongoose = require("mongoose");
 const cors = require("cors");
+const { cronAuth } = require("../middleware/auth.middleware");
 app.use(express.json());
 app.use(cors('https://mern-crud-sacq.onrender.com/post','https://mern-crud-sacq.onrender.com/post', 'https://mern-crud-sacq.onrender.com/api/products'));
 
@@ -65,6 +66,49 @@ app.put("/api/products/:id", async (req, res) => {
     return res.status(200).json(result);
   } catch (error) {
     return res.status(400).send(error);
+  }
+});
+
+// Database status endpoint
+app.get('/api/status', async (_req, res) => {
+  const dbState = mongoose.connection.readyState;
+  const states = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting',
+  };
+  res.json({
+    status: 'success',
+    message: `Server is running`,
+    data: {
+      database: states[dbState] || 'unknown',
+      uptime: process.uptime(),
+    },
+  });
+});
+
+// ─── MongoDB Connection CronJob ─────────────────────────────────────────────────────
+
+app.get("/api/db-heartbeat", cronAuth, async (req, res) => {
+  try {
+    await mongoose.connection.db
+      .collection("heartbeat")
+      .updateOne(
+        { _id: "heartbeat" },
+        { $set: { lastRun: new Date() } },
+        { upsert: true }
+      );
+
+    res.json({
+      success: true,
+      message: "Heartbeat updated"
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
   }
 });
 
