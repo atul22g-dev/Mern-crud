@@ -21,7 +21,7 @@ app.use(
 );
 
 // Database Connection (serverless-ready with global caching)
-const connectDB = require("./Database/db_conn");
+const connectDB = require("./Database/conn.js");
 
 // Product Schema
 const Product = mongoose.models.Product ||
