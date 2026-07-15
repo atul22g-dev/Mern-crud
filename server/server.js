@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const PORT = process.env.PORT || 5500;
 const cors = require("cors");
 require("dotenv").config();
+const { cronAuth } = require("./middleware/auth.middleware");
 
 const app = express();
 
@@ -12,7 +13,6 @@ app.use(express.json());
 app.use(
     cors({
         origin: [
-            "https://mern-crud-sacq.onrender.com",
             "http://localhost:3000",
             "http://localhost:5173",
         ],
@@ -138,5 +138,30 @@ app.get("/api/status", (_req, res) => {
         database: mongoose.connection.readyState === 1,
     });
 });
+
+// MongoDB Connection CronJob
+app.get("/api/db-heartbeat", cronAuth, async (req, res) => {
+    try {
+        await mongoose.connection.db
+            .collection("heartbeat")
+            .updateOne(
+                { _id: "heartbeat" },
+                { $set: { lastRun: new Date() } },
+                { upsert: true }
+            );
+
+        res.json({
+            success: true,
+            message: "Heartbeat updated"
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+    }
+});
+
+
 app.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 module.exports = app;
