@@ -20,8 +20,8 @@ app.use(
     })
 );
 
-// Database Connection
-require("./Database/conn");
+// Database Connection (serverless-ready with global caching)
+const connectDB = require("./Database/db_conn");
 
 // Product Schema
 const Product = mongoose.models.Product ||
@@ -142,6 +142,9 @@ app.get("/api/status", (_req, res) => {
 // MongoDB Connection CronJob
 app.get("/api/db-heartbeat", cronAuth, async (req, res) => {
     try {
+        // Ensure MongoDB connection is established (uses global cache on warm starts)
+        await connectDB();
+
         await mongoose.connection.db
             .collection("heartbeat")
             .updateOne(
