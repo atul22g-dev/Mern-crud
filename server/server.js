@@ -132,11 +132,22 @@ app.delete("/api/products/:id", async (req, res) => {
 
 // Health Check
 app.get("/api/status", (_req, res) => {
+    const dbState = mongoose.connection.readyState;
+    const states = {
+        0: 'disconnected',
+        1: 'connected',
+        2: 'connecting',
+        3: 'disconnecting',
+    };
     res.json({
-        success: true,
-        uptime: process.uptime(),
-        database: mongoose.connection.readyState === 1,
+        status: 'success',
+        message: `Server is running`,
+        data: {
+            database: states[dbState] || 'unknown',
+            uptime: process.uptime(),
+        },
     });
+
 });
 
 // MongoDB Connection CronJob
