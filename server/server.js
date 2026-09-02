@@ -10,12 +10,21 @@ const app = express();
 // Middleware
 app.use(express.json());
 
+const ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "https://mern-crud-atul22g-dev.vercel.app",
+];
+
 app.use(
     cors({
-        origin: [
-            "http://localhost:3000",
-            "http://localhost:5173",
-        ],
+        origin: (origin, callback) => {
+            // Allow requests with no origin (mobile apps, curl, server-to-server)
+            if (!origin) return callback(null, true);
+            if (ALLOWED_ORIGINS.includes(origin)) {
+                return callback(null, true);
+            }
+            callback(new Error(`CORS blocked for origin: ${origin}`));
+        },
         credentials: true,
     })
 );
