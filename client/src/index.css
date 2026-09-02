@@ -108,7 +108,6 @@ body::before {
   right: 0;
   bottom: 0;
   background: var(--gradient-mesh);
-  pointer-events: none;
   z-index: -1;
 }
 

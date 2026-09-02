@@ -404,10 +404,16 @@
 
 .form-control::placeholder {
   color: var(--text-muted);
-  opacity: 0.85;
+  opacity: 1;
+}
+
+.form-control[type=number]::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
 }
 
 .form-control:focus {
+  color: var(--text-primary);
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2), var(--shadow-glow-sm);
@@ -416,6 +422,17 @@
 
 .form-control:hover:not(:focus) {
   border-color: rgba(139, 92, 246, 0.25);
+}
+
+/* Remove number input spinner arrows */
+.form-control::-webkit-outer-spin-button,
+.form-control::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.form-control[type=number] {
+  -moz-appearance: textfield;
 }
 
 /* ============================================
@@ -644,20 +661,38 @@ tr:hover td {
 }
 
 /* ============================================
-   MODAL
+   MODAL (native <dialog>)
    ============================================ */
-.modal-overlay {
+.modal-dialog {
   position: fixed;
   inset: 0;
+  width: fit-content;
+  height: fit-content;
+  max-width: calc(100vw - 3rem);
+  max-height: calc(100vh - 3rem);
+  margin: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-dialog:not([open]) {
+  display: none;
+}
+
+.modal-dialog::backdrop {
   background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+}
+
+.modal-dialog[open] {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
-  padding: 1.5rem;
-  animation: fadeIn 0.2s ease-out;
+  pointer-events:all
 }
 
 .modal-card {
@@ -665,10 +700,15 @@ tr:hover td {
   max-width: 460px;
   padding: 0;
   animation: fadeInUp 0.25s ease-out;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: none;
 }
 
 .modal-card:hover {
   transform: none;
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(139, 92, 246, 0.08);
 }
 
 .modal-card--danger {

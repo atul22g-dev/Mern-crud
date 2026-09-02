@@ -172,6 +172,7 @@ app.get('/api/status', async (_req, res, next) => {
 // Create Product
 app.post("/api/products", async (req, res) => {
     try {
+        await connectDB();
         const product = await Product.create({
             name: req.body.name,
             price: req.body.price,
@@ -189,6 +190,7 @@ app.post("/api/products", async (req, res) => {
 // Get All Products
 app.get("/api/products", async (_req, res) => {
     try {
+        await connectDB();
         const products = await Product.find();
         res.json(products);
     } catch (err) {
@@ -199,6 +201,7 @@ app.get("/api/products", async (_req, res) => {
 // Get Product By Id
 app.get("/api/products/:id", async (req, res) => {
     try {
+        await connectDB();
         const product = await Product.findById(req.params.id);
 
         if (!product) {
@@ -216,6 +219,7 @@ app.get("/api/products/:id", async (req, res) => {
 // Update Product
 app.put("/api/products/:id", async (req, res) => {
     try {
+        await connectDB();
         const product = await Product.findByIdAndUpdate(
             req.params.id,
             {
@@ -236,6 +240,7 @@ app.put("/api/products/:id", async (req, res) => {
 // Delete Product
 app.delete("/api/products/:id", async (req, res) => {
     try {
+        await connectDB();
         const result = await Product.findByIdAndDelete(req.params.id);
 
         res.json({

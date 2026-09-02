@@ -1,11 +1,25 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 
 const EditModal = ({ product, onClose, onSave }) => {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [saving, setSaving] = useState(false);
+  const dialogRef = useRef(null);
   const nameInputRef = useRef(null);
 
+  const isOpen = Boolean(product);
+
+  // Sync dialog open/close with product prop
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    if (isOpen && !dialog.open) {
+      dialog.showModal();
+    }
+  }, [isOpen]);
+
+  // Populate form when product changes
   useEffect(() => {
     if (product) {
       setName(product.name || "");
@@ -13,23 +27,28 @@ const EditModal = ({ product, onClose, onSave }) => {
     }
   }, [product]);
 
-  // Focus the name input after mount (replaces autoFocus for accessibility)
+  // Focus name input after dialog opens
   useEffect(() => {
-    if (product && nameInputRef.current) {
+    if (isOpen && nameInputRef.current) {
       nameInputRef.current.focus();
     }
-  }, [product]);
+  }, [isOpen]);
 
-  // Close on Escape
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
+  // Handle native dialog close/cancel events
+  const handleDialogClose = useCallback(() => {
+    onClose();
   }, [onClose]);
 
-  if (!product) return null;
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    dialog.addEventListener("close", handleDialogClose);
+    dialog.addEventListener("cancel", handleDialogClose);
+    return () => {
+      dialog.removeEventListener("close", handleDialogClose);
+      dialog.removeEventListener("cancel", handleDialogClose);
+    };
+  }, [handleDialogClose]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,7 +57,7 @@ const EditModal = ({ product, onClose, onSave }) => {
     setSaving(true);
     try {
       await onSave(product._id, { name, price });
-      onClose();
+      dialogRef.current?.close();
     } catch {
       // error handled by parent
     } finally {
@@ -46,8 +65,18 @@ const EditModal = ({ product, onClose, onSave }) => {
     }
   };
 
+  // Prevent close during save
+  const handleDialogCancel = (e) => {
+    if (saving) e.preventDefault();
+  };
+
   return (
-    <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+    <dialog
+      ref={dialogRef}
+      className="modal-dialog"
+      onCancel={handleDialogCancel}
+      aria-labelledby="edit-modal-title"
+    >
       <div className="modal-card glass-card" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="modal-header">
@@ -55,7 +84,7 @@ const EditModal = ({ product, onClose, onSave }) => {
             <h2 className="modal-title" id="edit-modal-title">Edit Product</h2>
             <p className="modal-subtitle">Update the product details below</p>
           </div>
-          <button className="modal-close" onClick={onClose} title="Close">
+          <button className="modal-close" onClick={() => dialogRef.current?.close()} title="Close">
             ✕
           </button>
         </div>
@@ -93,7 +122,7 @@ const EditModal = ({ product, onClose, onSave }) => {
             <button
               type="button"
               className="btn btn-outline btn-sm"
-              onClick={onClose}
+              onClick={() => dialogRef.current?.close()}
               disabled={saving}
             >
               Cancel
@@ -108,7 +137,7 @@ const EditModal = ({ product, onClose, onSave }) => {
           </div>
         </form>
       </div>
-    </div>
+    </dialog>
   );
 };
 
