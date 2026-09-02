@@ -1,125 +1,136 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-const BackendURL = process.env.REACT_APP_BACKENDURL;
+import React, { useEffect, useState, useCallback } from "react";
+import { getProducts, updateProduct, deleteProduct as apiDeleteProduct } from "../api";
+import EditModal from "./EditModal";
+import DeleteModal from "./DeleteModal";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Edit
-  const editProduct = async (id) => {
-    let name = prompt("Enter Product Name");
-    let price = prompt("Enter Product Price");
-    const res = await fetch(BackendURL + `/api/products/${id}`, {
-      method: "put",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name,
-        price,
-      }),
-    });
-    const data = res.json();
-    if (!data || res.status === 400) {
-      alert("Product is Not Update");
-    } else {
-      alert("Product is Update");
-    }
-  };
+  // Modal state
+  const [editProduct, setEditProduct] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // Get All Projects
-  // useEffect(() => {
-  //   async function fetchProducts() {
-  //     try {
-  //       const { data } = await axios.get(BackendURL+"/api/products");
-  //       setProducts(data);
-  //     } catch (err) {
-  //       console.log(err);
-  //     }
-  //   }
-  //   fetchProducts();
-  // }, []);
-
-  async function fetchProducts() {
+  const fetchProducts = useCallback(async () => {
     try {
-      const { data } = await axios.get(BackendURL + "/api/products");
+      setLoading(true);
+      setError(null);
+      const data = await getProducts();
       setProducts(data);
     } catch (err) {
-      console.log(err);
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    fetchProducts()
   }, []);
 
-  // Delete
-  const deleteProduct = async (id) => {
-    const res = await fetch(`${BackendURL}/api/products/${id}`, {
-      method: "Delete",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id,
-      }),
-    });
-    const data = await res.json();
-    console.log(data);
-    if (!data || res.status === 400) {
-      alert("Product is Not Delete");
-    } else {
-      fetchProducts()
-      alert("Product is Delete");
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
-    }
+  // Edit
+  const handleSaveEdit = async (id, { name, price }) => {
+    await updateProduct(id, { name, price });
+    fetchProducts();
+  };
+
+  // Delete
+  const handleConfirmDelete = async (id) => {
+    await apiDeleteProduct(id);
+    fetchProducts();
   };
 
   return (
-    <>
-      <div className="App">
+    <section className="products-section">
+      <div className="products-header">
         <h1>My Products</h1>
-        <table className="mt-3">
-          <thead>
-            <tr>
-              <th>
-                <h3>Name</h3>
-              </th>
-              <th>
-                <h3>Price</h3>
-              </th>
-              <th>
-                <h3>Action</h3>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => {
-              return (
-                <tr key={product._id}>
-                  <td>
-                    <h4>{product.name}</h4>
-                  </td>
-                  <td>
-                    <h4>{product.price}</h4>
-                  </td>
-                  <td>
-                    <i
-                      className="fa-solid fa-pen-nib me-3 c-pointer"
-                      onClick={() => editProduct(product._id)}
-                    ></i>
-                    <i
-                      className="fa-solid fa-trash ms-3 c-pointer"
-                      onClick={() => deleteProduct(product._id)}
-                    ></i>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <p>Manage and organize your product catalog</p>
       </div>
-    </>
+
+      {loading ? (
+        <div className="products-grid">
+          <div className="loading-state">
+            <div className="loading-spinner"></div>
+            <p style={{ color: "var(--text-secondary)" }}>Loading products...</p>
+          </div>
+        </div>
+      ) : error ? (
+        <div className="products-grid">
+          <div className="empty-state">
+            <div className="empty-state-icon">⚠️</div>
+            <h3>Failed to load products</h3>
+            <p>{error}</p>
+            <button className="btn btn-primary btn-sm" onClick={fetchProducts}>
+              Retry
+            </button>
+          </div>
+        </div>
+      ) : products.length === 0 ? (
+        <div className="products-grid">
+          <div className="empty-state">
+            <div className="empty-state-icon">📦</div>
+            <h3>No products yet</h3>
+            <p>Create your first product to get started</p>
+          </div>
+        </div>
+      ) : (
+        <div className="products-grid">
+          {products.map((product, index) => (
+            <div
+              key={product._id}
+              className="glass-card product-card"
+              style={{
+                animation: `fadeInUp 0.5s ease-out forwards`,
+                animationDelay: `${index * 0.08}s`,
+                opacity: 0,
+              }}
+            >
+              <div className="product-card-header">
+                <div className="product-icon">🏷️</div>
+                <div className="product-actions">
+                  <button
+                    className="btn btn-icon c-pointer"
+                    onClick={() => setEditProduct(product)}
+                    title="Edit product"
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    className="btn btn-icon delete c-pointer"
+                    onClick={() => setDeleteTarget(product)}
+                    title="Delete product"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+              <div className="product-name">{product.name}</div>
+              <div className="product-price">₹{product.price}</div>
+              <div className="product-card-footer">
+                <span>ID: {product._id.slice(-6).toUpperCase()}</span>
+                <span>Active</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      <EditModal
+        product={editProduct}
+        onClose={() => setEditProduct(null)}
+        onSave={handleSaveEdit}
+      />
+
+      {/* Delete Modal */}
+      <DeleteModal
+        product={deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+      />
+    </section>
   );
 };
 

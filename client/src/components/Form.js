@@ -1,70 +1,87 @@
 import React, { useState } from "react";
-const BackendURL = process.env.REACT_APP_BACKENDURL;
+import { createProduct } from "../api";
 
 const Form = () => {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const getProject = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch(BackendURL+"/api/products", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name,
-        price,
-      }),
-      
-    });
-    const data = res.json();
-    if (!data || res.status === 400) {
-      alert("Form Not Submit");
-    } else {
-      alert("Form Submit");
-      window.location.reload();
+
+    if (!name.trim() || !price.trim()) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await createProduct({ name, price });
+      setName("");
+      setPrice("");
+      alert("Product created successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to create product");
+    } finally {
+      setSubmitting(false);
     }
   };
+
   return (
-    <section className="container mt-5">
-      <h1>Post Data</h1>
-      <div className="mt-3">
-        <label htmlFor="exampleFormControlInput1" className="form-label">
-          Enter Product Name
-        </label>
-        <input
-          type="text"
-          className="form-control"
-          name="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          id="exampleFormControlInput1"
-          placeholder="Enter The Product Name"
-        />
-      </div>
-      <div className="mb-3">
-        <label htmlFor="exampleFormControlTextarea1" className="form-label">
-          Enter Product Price
-        </label>
-        <input
-          type="text"
-          className="form-control"
-          id="exampleFormControlInput1"
-          name="price"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          placeholder="Enter The Price"
-        />
-        <div className="col-12 mt-4">
+    <section className="form-section">
+      <div className="form-card glass-card">
+        <div style={{ marginBottom: "0.5rem" }}>
+          <span style={{ fontSize: "2rem" }}>✨</span>
+        </div>
+        <h1 className="form-title">Post Data</h1>
+        <p className="form-subtitle">Create a new product entry in your catalog</p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="productName">Product Name</label>
+            <input
+              type="text"
+              className="form-control"
+              id="productName"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter the product name"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="productPrice">Product Price</label>
+            <input
+              type="number"
+              className="form-control"
+              id="productPrice"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="Enter the price (e.g. 29.99)"
+              step="0.01"
+              min="0"
+            />
+          </div>
+
           <button
             className="btn btn-primary"
             type="submit"
-            onClick={getProject}
+            disabled={submitting}
+            style={{ width: "100%", justifyContent: "center", marginTop: "0.5rem" }}
           >
-            Submit form
+            {submitting ? (
+              <>
+                <span className="loading-spinner" style={{ width: "18px", height: "18px", borderWidth: "2px" }}></span>
+                Creating...
+              </>
+            ) : (
+              <>
+                <span>🚀</span> Create Product
+              </>
+            )}
           </button>
-        </div>
+        </form>
       </div>
     </section>
   );

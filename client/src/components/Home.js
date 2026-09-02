@@ -3,31 +3,35 @@ import { Link } from "react-router-dom";
 
 const Home = () => {
   return (
-    <>
-      <div className="px-4 py-5 my-5 text-center">
-        <h1 className="display-5 fw-bold">Mern-crud</h1>
-        <div className="col-lg-6 mx-auto">
-          <p className="lead mb-4">
-            Quickly design and customize responsive mobile-first sites with
-            Bootstrap, the world’s most popular front-end open source toolkit,
-            featuring Sass variables and mixins, responsive grid system,
-            extensive prebuilt components, and powerful JavaScript plugins.
-          </p>
-          <div className="d-grid gap-2 d-sm-flex justify-content-sm-center">
-            <Link type="button" to="/post" className="btn btn-primary btn-lg px-4 gap-3">
-              Post Data
-            </Link>
-            <Link
-              to="/products"
-              type="button"
-              className="btn btn-outline-secondary btn-lg px-4"
-            >
-              Products
-            </Link>
-          </div>
+    <section className="hero-section">
+      <div className="hero-decoration hero-decoration-1"></div>
+      <div className="hero-decoration hero-decoration-2"></div>
+      
+      <div className="hero-content">
+        <div className="hero-badge">
+          ✨ Modern MERN Stack CRUD
+        </div>
+        
+        <h1 className="hero-title">
+          Build <span className="gradient-text">Full-Stack Apps</span>
+          <br />with Confidence
+        </h1>
+        
+        <p className="hero-description">
+          A sleek, modern CRUD application built with MongoDB, Express, React, 
+          and Node.js. Create, manage, and organize your products effortlessly.
+        </p>
+        
+        <div className="hero-actions">
+          <Link to="/post" className="btn btn-primary">
+            <span>🚀</span> Get Started
+          </Link>
+          <Link to="/products" className="btn btn-outline">
+            <span>📦</span> View Products
+          </Link>
         </div>
       </div>
-    </>
+    </section>
   );
 };
 
